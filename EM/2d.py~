@@ -1,0 +1,70 @@
+import math
+
+prob = []
+xdata = []
+ydata = []
+n = 23
+
+with open('spectX.txt') as v:
+	xdata = v.read().splitlines()
+
+for i in xrange(0, len(xdata)):
+        temp = []
+        for x in xdata[i].strip().split(' '):
+                temp.append(int(x))
+        xdata[i] = temp
+
+with open('spectY.txt') as u:
+        ydata = u.read().splitlines()
+
+for i in xrange(0, len(ydata)):
+        ydata[i] = int(ydata[i])
+
+for i in xrange(0,23):
+        prob.append(1.0/n)
+
+
+def likelihood(prob, xdata, ydata):
+	l = 0
+	p = 1
+	mistakes = 0
+	for j in xrange(0, len(xdata)):
+		x = xdata[j]	
+		t = 1
+		for i in xrange(0, len(prob)):
+			t = t*((1-prob[i])**x[i])
+		p = 1 - t
+		if ydata[j] == 0 and p >= 0.5:
+			mistakes = mistakes + 1
+		if ydata[j] == 1 and p <= 0.5:
+			mistakes = mistakes + 1
+		if ydata[j] == 0:
+			p = t
+		l = l + math.log(p)
+	return (l/len(xdata), mistakes)
+
+def getUpdate(index, xdata, ydata, prob):
+	value = 0.0
+	xione = 0
+	for t in xrange(0, len(xdata)):
+		y = ydata[t]
+		x = xdata[t]
+		temp = 1
+		for j in xrange(0, len(prob)):
+			temp = temp*((1-prob[j])**x[j])
+		d = 1 - temp	
+		value = value + (y*x[index]*prob[index])/d
+		xione = xione + x[index];
+	return value/float(xione)
+
+def update(prob, xdata, ydata):
+	temp = []
+	for i in xrange(0, len(prob)):
+		t = getUpdate(i, xdata, ydata, prob)
+ 		temp.append(t)
+	return temp
+
+for i in xrange(0, 257):
+	print i,likelihood(prob, xdata, ydata)
+	if(i in [0,1,2,4,8,16,32,64,128,256]):
+		prob = update(prob, xdata, ydata)
